@@ -3,7 +3,8 @@ name: Docker Image Core CI/CD
 
 on:
   push:
-    branches: [main]  # 在main分支有push操作的时候自动部署
+   tags:
+      - "*"
 
 
 jobs:
