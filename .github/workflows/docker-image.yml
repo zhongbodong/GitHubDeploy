@@ -4,9 +4,6 @@ name: Docker Image Core CI/CD
 on:
   push:
     branches: [main]  # 在main分支有push操作的时候自动部署
-env:
-  IMAGE_NAME: ${{ secrets.DOCKER_REPOSITORY }} # 镜像名称
-  IMAGE_NAME_TAG: ${{ secrets.DOCKER_REPOSITORY }}:v${{ github.run_id }}.${{ github.run_number }}
 
 
 jobs:
