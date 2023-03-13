@@ -39,7 +39,7 @@ jobs:
       - name: Push Acme.BookStore.Web Image
         uses: docker/build-push-action@v2
         with:
-          context: src/Acme.BookStore.Web
+          context: ../src/Acme.BookStore.Web
           push: true
           tags: zhongbodong/lion.abp.pro:${{ steps.vars.outputs.RELEASE_VERSION }}
 
