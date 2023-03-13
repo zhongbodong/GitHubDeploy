@@ -42,7 +42,3 @@ jobs:
           context: src/Acme.BookStore.Web
           push: true
           tags: dongzhongbo/lion.abp.pro:${{ steps.vars.outputs.RELEASE_VERSION }}
-
-
-
-  
