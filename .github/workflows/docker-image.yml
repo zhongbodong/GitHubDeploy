@@ -6,12 +6,12 @@ on:
     branches: [main]  # 在main分支有push操作的时候自动部署
 env:
   IMAGE_NAME: ${{ secrets.DOCKER_REPOSITORY }} # 镜像名称
-  IMAGE_NAME_TAG: ${{ secrets.DOCKER_REPOSITORY }}:v${{ github.run_id }}.${{ github.run_number }} # 镜像名称:TAG名称（这里我很想实现自动1.1.1，1.1.2这种奈何我不会）
+  IMAGE_NAME_TAG: ${{ secrets.DOCKER_REPOSITORY }}:v${{ github.run_id }}.${{ github.run_number }}
 
 
 jobs:
   api:
-    runs-on: CentOS 7.3
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install Dotnet 7.0.102
