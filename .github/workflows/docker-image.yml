@@ -1,8 +1,7 @@
 name: Docker-Images
 on:
   push:
-    tags:
-      - "*"
+     branches: [master]
 
 jobs:
   api:
