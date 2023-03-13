@@ -1,57 +1,44 @@
-name: Docker Image Core CI/CD
-
+name: Docker-Images1
 on:
   push:
-    branches: [master]  # 在main分支有push操作的时候自动部署
-env:
-  IMAGE_NAME: ${{ secrets.DOCKER_REPOSITORY }} # 镜像名称
-  IMAGE_NAME_TAG: ${{ secrets.DOCKER_REPOSITORY }}:v${{ github.run_id }}.${{ github.run_number }} # 镜像名称:TAG名称（这里我很想实现自动1.1.1，1.1.2这种奈何我不会）
-
+    tags:
+      - "*"
 
 jobs:
-  build-net-core: # 打包上传镜像
-    runs-on: CentOS 7.3  # 依赖的环境 
+  api:
+    runs-on: CentOS 7.3
     steps:
       - uses: actions/checkout@v2
-      - name: Build .Net Core
+      - name: Install Dotnet 7.0.102
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 7.0.x
-      - name: dotnet restore  
-        run: dotnet restore ./src/Acme.BookStore.Web/Acme.BookStore.Web.csproj
-      - name: dotnet publish # 编译项目
-        run: dotnet publish ./src/Acme.BookStore.Web/Acme.BookStore.Web.csproj --configuration -c Release --no-restore -o ./aspnet-core/app
-      - name: Docker Image
-        run: ls
-      - name: Copy DockerFile
-        run: cp  ./src/Acme.BookStore.Web/Dockerfile ./aspnet-core/app
-      - name: Login to registry
+          include-prerelease: True
+      - name: Build
+        run: dotnet build Acme.BookStore.sln
+
+      - name: Publish 
+        run: dotnet publish src/Acme.BookStore.Web/Acme.BookStore.Web.csproj -o src/Acme.BookStore.Web/publish
+
+      - name: Setting Version
+        id: vars
+        run: echo ::set-output name=RELEASE_VERSION::$(echo ${GITHUB_REF:10})
+
+      # docker login
+      - name: Login to Docker Hub
         uses: docker/login-action@v1
-        with: # 登录阿里云镜像服务器
+        with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          registry: registry.us-west-1.aliyuncs.com
-      - name: Build Image # 打包docker镜像
-        run: docker build -t ${{ env.IMAGE_NAME_TAG }} ./aspnet-core/app
-      - name: Push Image # 推送镜像
-        run: docker push ${{ env.IMAGE_NAME_TAG }}
 
-  pull-docker:  # docker部署
-    needs: [build-net-core]
-    name: Pull Docker
-    runs-on: CentOS 7.3
-    steps:
-      - name: Deploy
-        uses: appleboy/ssh-action@master
+      # 设置 docker 环境
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # build 并且 push docker 镜像
+      - name: Push Acme.BookStore.Web Image
+        uses: docker/build-push-action@v2
         with:
-          host: ${{ secrets.HOST }} # 服务器ip
-          username: ${{ secrets.HOST_USERNAME }} # 服务器登录用户名
-          password: ${{ secrets.HOST_PASSWORD }} # 服务器登录密码
-          port: ${{ secrets.HOST_PORT }} # 服务器ssh端口
-          script: |
-            docker stop $(docker ps -a | grep ${{ env.IMAGE_NAME }} |  awk '{print $1}')
-            docker rm -f $(docker ps -a | grep ${{ env.IMAGE_NAME }} |  awk '{print $1}')
-            docker rmi -f $(docker images | grep ${{ env.IMAGE_NAME }} | awk '{print $3}')
-            docker login --username=${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
-            docker pull ${{ env.IMAGE_NAME_TAG }}
-            docker run -d -p 8080:80  ${{ env.IMAGE_NAME_TAG }}
+          context: src/Acme.BookStore.Web
+          push: true
+          tags: zhongbodong/lion.abp.pro:${{ steps.vars.outputs.RELEASE_VERSION }}
