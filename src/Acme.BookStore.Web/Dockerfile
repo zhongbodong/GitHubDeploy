@@ -27,6 +27,6 @@ EXPOSE 80
 ENV TZ=Asia/Shanghai
 
 # 设置环境变量
-ENV ASPNETCORE_ENVIRONMENT=Production
+# ENV ASPNETCORE_ENVIRONMENT=Production
 
 ENTRYPOINT ["dotnet", "Acme.BookStore.Web.dll"]
